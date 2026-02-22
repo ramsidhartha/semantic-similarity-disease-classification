@@ -1,0 +1,170 @@
+{
+  "validation": {
+    "expression_only": {
+      "accuracy": 0.9352941176470588,
+      "f1": 0.9385474860335196,
+      "auc_roc": 0.934565849605318,
+      "confusion_matrix": [
+        [
+          84,
+          3
+        ],
+        [
+          8,
+          75
+        ]
+      ]
+    },
+    "go_only": {
+      "accuracy": 0.9470588235294117,
+      "f1": 0.9497206703910615,
+      "auc_roc": 0.9463370724276416,
+      "confusion_matrix": [
+        [
+          85,
+          2
+        ],
+        [
+          7,
+          76
+        ]
+      ]
+    },
+    "combined": {
+      "accuracy": 0.9117647058823529,
+      "f1": 0.9171270718232044,
+      "auc_roc": 0.9107464340119097,
+      "confusion_matrix": [
+        [
+          83,
+          4
+        ],
+        [
+          11,
+          72
+        ]
+      ]
+    }
+  },
+  "cross_validation": {
+    "expression_only": {
+      "mean_accuracy": 0.9259653141361255,
+      "std_accuracy": 0.008325184412862232,
+      "fold_scores": [
+        0.9322916666666666,
+        0.9166666666666666,
+        0.9375,
+        0.9166666666666666,
+        0.9267015706806283
+      ]
+    },
+    "go_only": {
+      "mean_accuracy": 0.9165794066317627,
+      "std_accuracy": 0.006590389596415658,
+      "fold_scores": [
+        0.90625,
+        0.9166666666666666,
+        0.9166666666666666,
+        0.9270833333333334,
+        0.9162303664921466
+      ]
+    },
+    "combined": {
+      "mean_accuracy": 0.9311736474694591,
+      "std_accuracy": 0.0076976191074592595,
+      "fold_scores": [
+        0.921875,
+        0.9427083333333334,
+        0.9375,
+        0.9270833333333334,
+        0.9267015706806283
+      ]
+    }
+  },
+  "case_studies": {
+    "total_samples": 170,
+    "misclassified_count": 15,
+    "cases": [
+      {
+        "sample_id": "TCGA-66-2756-01",
+        "true_label": "LUSC",
+        "predicted": "LUAD",
+        "type": "misclassified",
+        "go_confidence": 0.8326023391812865,
+        "expr_confidence": 0.8447870866392476,
+        "go_prediction": "LUAD",
+        "expr_prediction": "LUAD"
+      },
+      {
+        "sample_id": "TCGA-56-7731-11",
+        "true_label": "LUSC",
+        "predicted": "LUAD",
+        "type": "misclassified",
+        "go_confidence": 0.8917239746739273,
+        "expr_confidence": 0.6391180495534428,
+        "go_prediction": "LUAD",
+        "expr_prediction": "LUAD"
+      },
+      {
+        "sample_id": "TCGA-22-1017-01",
+        "true_label": "LUSC",
+        "predicted": "LUAD",
+        "type": "misclassified",
+        "go_confidence": 0.930713363191975,
+        "expr_confidence": 0.7899601593625498,
+        "go_prediction": "LUAD",
+        "expr_prediction": "LUAD"
+      },
+      {
+        "sample_id": "TCGA-33-6737-11",
+        "true_label": "LUSC",
+        "predicted": "LUAD",
+        "type": "misclassified",
+        "go_confidence": 0.5384795807398183,
+        "expr_confidence": 0.6206527352173419,
+        "go_prediction": "LUAD",
+        "expr_prediction": "LUSC"
+      },
+      {
+        "sample_id": "TCGA-55-7724-01",
+        "true_label": "LUAD",
+        "predicted": "LUSC",
+        "type": "misclassified",
+        "go_confidence": 0.9496666666666667,
+        "expr_confidence": 0.81,
+        "go_prediction": "LUSC",
+        "expr_prediction": "LUSC"
+      },
+      {
+        "sample_id": "TCGA-78-7147-01",
+        "true_label": "LUAD",
+        "predicted": "LUAD",
+        "type": "correct_high_confidence",
+        "go_confidence": 0.9894333333333333,
+        "expr_confidence": 0.7970615227294732,
+        "go_prediction": "LUAD",
+        "expr_prediction": "LUAD"
+      },
+      {
+        "sample_id": "TCGA-NC-A5HG-01",
+        "true_label": "LUSC",
+        "predicted": "LUSC",
+        "type": "correct_high_confidence",
+        "go_confidence": 1.0,
+        "expr_confidence": 0.76,
+        "go_prediction": "LUSC",
+        "expr_prediction": "LUSC"
+      },
+      {
+        "sample_id": "TCGA-38-7271-01",
+        "true_label": "LUAD",
+        "predicted": "LUAD",
+        "type": "correct_high_confidence",
+        "go_confidence": 0.8913095556107499,
+        "expr_confidence": 0.8577363488396925,
+        "go_prediction": "LUAD",
+        "expr_prediction": "LUAD"
+      }
+    ]
+  }
+}

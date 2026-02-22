@@ -1,0 +1,211 @@
+import os
+import json
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.metrics import confusion_matrix, roc_curve, auc
+import networkx as nx
+
+BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+PROCESSED_DIR = os.path.join(BASE_DIR, "data", "processed")
+RESULTS_DIR = os.path.join(BASE_DIR, "results")
+FIGURES_DIR = os.path.join(RESULTS_DIR, "figures")
+
+
+def plot_deg_volcano(deg_df, output_path):
+    fig, ax = plt.subplots(figsize=(10, 8))
+    
+    deg_df['neg_log_pval'] = -np.log10(deg_df['pvalue_adj'] + 1e-300)
+    
+    significant = (deg_df['abs_log2fc'] >= 1.0) & (deg_df['pvalue_adj'] < 0.01)
+    
+    ax.scatter(
+        deg_df.loc[~significant, 'log2fc'],
+        deg_df.loc[~significant, 'neg_log_pval'],
+        c='gray', alpha=0.5, s=10, label='Not significant'
+    )
+    
+    up_luad = significant & (deg_df['log2fc'] > 0)
+    ax.scatter(
+        deg_df.loc[up_luad, 'log2fc'],
+        deg_df.loc[up_luad, 'neg_log_pval'],
+        c='red', alpha=0.7, s=20, label='Upregulated in LUAD'
+    )
+    
+    up_lusc = significant & (deg_df['log2fc'] < 0)
+    ax.scatter(
+        deg_df.loc[up_lusc, 'log2fc'],
+        deg_df.loc[up_lusc, 'neg_log_pval'],
+        c='blue', alpha=0.7, s=20, label='Upregulated in LUSC'
+    )
+    
+    ax.axhline(y=-np.log10(0.01), linestyle='--', color='black', linewidth=0.5)
+    ax.axvline(x=1.0, linestyle='--', color='black', linewidth=0.5)
+    ax.axvline(x=-1.0, linestyle='--', color='black', linewidth=0.5)
+    
+    ax.set_xlabel('Log2 Fold Change (LUAD vs LUSC)', fontsize=12)
+    ax.set_ylabel('-Log10 Adjusted P-value', fontsize=12)
+    ax.set_title('Differential Expression Analysis', fontsize=14)
+    ax.legend()
+    
+    plt.tight_layout()
+    plt.savefig(output_path, dpi=150)
+    plt.close()
+
+
+def plot_go_similarity_heatmap(matrix, genes, output_path, n_genes=50):
+    if len(genes) > n_genes:
+        matrix = matrix[:n_genes, :n_genes]
+        genes = genes[:n_genes]
+    
+    fig, ax = plt.subplots(figsize=(12, 10))
+    
+    sns.heatmap(
+        matrix, 
+        cmap='RdYlBu_r',
+        xticklabels=genes,
+        yticklabels=genes,
+        ax=ax
+    )
+    
+    ax.set_title('GO Semantic Similarity Matrix', fontsize=14)
+    plt.xticks(rotation=90, fontsize=6)
+    plt.yticks(rotation=0, fontsize=6)
+    
+    plt.tight_layout()
+    plt.savefig(output_path, dpi=150)
+    plt.close()
+
+
+def plot_go_network(matrix, genes, output_path, threshold=0.5, n_genes=30):
+    if len(genes) > n_genes:
+        matrix = matrix[:n_genes, :n_genes]
+        genes = genes[:n_genes]
+    
+    G = nx.Graph()
+    
+    for i, gene in enumerate(genes):
+        G.add_node(gene)
+    
+    for i in range(len(genes)):
+        for j in range(i + 1, len(genes)):
+            if matrix[i, j] > threshold:
+                G.add_edge(genes[i], genes[j], weight=matrix[i, j])
+    
+    fig, ax = plt.subplots(figsize=(14, 12))
+    
+    pos = nx.spring_layout(G, k=2, iterations=50, seed=42)
+    
+    degrees = dict(G.degree())
+    node_sizes = [100 + degrees[node] * 50 for node in G.nodes()]
+    
+    edge_weights = [G[u][v]['weight'] * 2 for u, v in G.edges()]
+    
+    nx.draw_networkx_nodes(G, pos, node_size=node_sizes, node_color='lightblue', ax=ax)
+    nx.draw_networkx_edges(G, pos, width=edge_weights, alpha=0.5, edge_color='gray', ax=ax)
+    nx.draw_networkx_labels(G, pos, font_size=8, ax=ax)
+    
+    ax.set_title(f'GO Similarity Network (threshold > {threshold})', fontsize=14)
+    ax.axis('off')
+    
+    plt.tight_layout()
+    plt.savefig(output_path, dpi=150)
+    plt.close()
+
+
+def plot_model_comparison(results, output_path):
+    models = list(results.keys())
+    accuracies = [results[m]['accuracy'] for m in models]
+    f1_scores = [results[m]['f1'] for m in models]
+    
+    x = np.arange(len(models))
+    width = 0.35
+    
+    fig, ax = plt.subplots(figsize=(10, 6))
+    
+    bars1 = ax.bar(x - width/2, accuracies, width, label='Accuracy', color='steelblue')
+    bars2 = ax.bar(x + width/2, f1_scores, width, label='F1 Score', color='coral')
+    
+    ax.set_ylabel('Score', fontsize=12)
+    ax.set_title('Model Performance Comparison', fontsize=14)
+    ax.set_xticks(x)
+    ax.set_xticklabels([m.replace('_', ' ').title() for m in models], fontsize=10)
+    ax.legend()
+    ax.set_ylim(0, 1.1)
+    
+    for bar in bars1:
+        height = bar.get_height()
+        ax.annotate(f'{height:.3f}', xy=(bar.get_x() + bar.get_width()/2, height),
+                   xytext=(0, 3), textcoords="offset points", ha='center', fontsize=9)
+    
+    for bar in bars2:
+        height = bar.get_height()
+        ax.annotate(f'{height:.3f}', xy=(bar.get_x() + bar.get_width()/2, height),
+                   xytext=(0, 3), textcoords="offset points", ha='center', fontsize=9)
+    
+    plt.tight_layout()
+    plt.savefig(output_path, dpi=150)
+    plt.close()
+
+
+def plot_feature_importance(importance, feature_names, output_path, top_n=15):
+    indices = np.argsort(importance)[::-1][:top_n]
+    
+    fig, ax = plt.subplots(figsize=(10, 6))
+    
+    ax.barh(range(top_n), importance[indices][::-1], color='steelblue')
+    ax.set_yticks(range(top_n))
+    
+    if feature_names is not None and len(feature_names) > max(indices):
+        labels = [feature_names[i] for i in indices[::-1]]
+    else:
+        labels = [f'Feature {i}' for i in indices[::-1]]
+    
+    ax.set_yticklabels(labels, fontsize=9)
+    ax.set_xlabel('Importance', fontsize=12)
+    ax.set_title('Top Feature Importance', fontsize=14)
+    
+    plt.tight_layout()
+    plt.savefig(output_path, dpi=150)
+    plt.close()
+
+
+def generate_all_visualizations():
+    os.makedirs(FIGURES_DIR, exist_ok=True)
+    
+    print("Generating visualizations...")
+    
+    deg_path = os.path.join(PROCESSED_DIR, "deg_analysis.csv")
+    if os.path.exists(deg_path):
+        deg_df = pd.read_csv(deg_path)
+        plot_deg_volcano(deg_df, os.path.join(FIGURES_DIR, "volcano_plot.png"))
+        print("  Created volcano_plot.png")
+    
+    matrix_path = os.path.join(PROCESSED_DIR, "go_similarity_matrix.npy")
+    genes_path = os.path.join(PROCESSED_DIR, "similarity_genes.json")
+    if os.path.exists(matrix_path) and os.path.exists(genes_path):
+        matrix = np.load(matrix_path)
+        with open(genes_path, 'r') as f:
+            genes = json.load(f)
+        
+        plot_go_similarity_heatmap(matrix, genes, os.path.join(FIGURES_DIR, "go_heatmap.png"))
+        print("  Created go_heatmap.png")
+        
+        plot_go_network(matrix, genes, os.path.join(FIGURES_DIR, "go_network.png"))
+        print("  Created go_network.png")
+    
+    results_path = os.path.join(RESULTS_DIR, "model_comparison_simple.json")
+    if not os.path.exists(results_path):
+        results_path = os.path.join(RESULTS_DIR, "model_comparison.json")
+    if os.path.exists(results_path):
+        with open(results_path, 'r') as f:
+            results = json.load(f)
+        plot_model_comparison(results, os.path.join(FIGURES_DIR, "model_comparison.png"))
+        print("  Created model_comparison.png")
+    
+    print("\nAll visualizations complete.")
+
+
+if __name__ == "__main__":
+    generate_all_visualizations()
