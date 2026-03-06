@@ -28,7 +28,7 @@ The standard approach using expression features alone yields a validation accura
 This approach leverages the Gene Ontology database to capture functional relationships, offering biological interpretability and robustness. GO-only features achieve 94.1% validation accuracy, comparable to expression-only, demonstrating that biological knowledge alone can classify cancer subtypes effectively.
 
 **Why Dual-Space:**
-While both spaces individually achieve approximately 94% accuracy, they capture fundamentally different information. Expression features detect quantitative patterns; GO features detect functional pathway activity. When combined, 5-fold cross-validation shows the Combined model achieves 93.1% mean accuracy (versus 92.6% expression-only and 91.7% GO-only), confirming that the two spaces provide complementary information.
+While both spaces individually achieve approximately 94% accuracy, they capture fundamentally different information. Expression features detect quantitative patterns; GO features detect functional pathway activity. When combined, 5-fold cross-validation shows the Combined model achieves 93.1% mean accuracy (versus 92.3% expression-only and 92.4% GO-only), confirming that the two spaces provide complementary information.
 
 ---
 
@@ -105,17 +105,17 @@ The raw matrix (left) shows 72.8% of gene pairs have zero similarity -- most gen
 
 | Model | Accuracy | F1 Score | AUC-ROC |
 |-------|----------|----------|---------|
-| Expression-only (baseline) | 93.5% | 0.939 | 0.935 |
-| GO-only (baseline) | 94.7% | 0.950 | 0.946 |
-| **Combined (main model)** | **91.2%** | **0.917** | **0.911** |
+| Expression-only (baseline) | 94.7% | 0.950 | 0.946 |
+| GO-only (baseline) | 93.5% | 0.938 | 0.935 |
+| **Combined (main model)** | **82.9%** | **0.850** | **0.827** |
 
 ### 4.2 5-Fold Cross-Validation (More Robust Estimate)
 
 | Model | Mean Accuracy | Std Dev |
 |-------|---------------|---------|
-| Expression-only | 92.6% | 0.8% |
-| GO-only | 91.7% | 0.7% |
-| **Combined** | **93.1%** | **0.8%** |
+| Expression-only | 92.3% | 0.8% |
+| GO-only | 92.4% | 0.8% |
+| **Combined** | **93.1%** | **1.1%** |
 
 The Combined model outperforms both baselines in cross-validation, confirming the value of dual-space feature integration.
 
@@ -134,13 +134,13 @@ We experimented with a Logistic Regression meta-learner (stacking) over the thre
 
 ### 4.4 Case Study Analysis
 
-Analysis of misclassified samples (15 out of 170 on validation):
+Analysis of misclassified samples (29 out of 170 on validation):
 
 | Sample ID | True Label | Predicted | GO Confidence | Expression Confidence |
 |-----------|-----------|-----------|---------------|----------------------|
-| TCGA-66-2756 | LUSC | LUAD | 0.83 | 0.84 |
-| TCGA-22-1017 | LUSC | LUAD | 0.93 | 0.79 |
-| TCGA-55-7724 | LUAD | LUSC | 0.95 | 0.81 |
+| TCGA-66-2756 | LUSC | LUAD | 0.94 | 0.83 |
+| TCGA-22-1017 | LUSC | LUAD | 1.00 | 0.79 |
+| TCGA-55-7724 | LUAD | LUSC | 1.00 | 0.98 |
 
 Misclassified samples show both models being moderately confident but disagreeing, suggesting these are genuine boundary cases between subtypes, potentially reflecting biological heterogeneity.
 

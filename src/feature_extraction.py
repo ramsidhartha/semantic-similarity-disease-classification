@@ -25,8 +25,7 @@ class FeatureExtractor:
             self.gene_to_go = json.load(f)
         
         self.go_matrix = np.load(os.path.join(PROCESSED_DIR, "go_similarity_matrix.npy"))
-        with open(os.path.join(PROCESSED_DIR, "similarity_genes.json"), 'r') as f:
-            self.go_genes = json.load(f)
+        self.go_genes = sorted(self.gene_to_go.keys())
     
     def _cluster_genes_by_go(self):
         if len(self.go_genes) < self.n_modules:

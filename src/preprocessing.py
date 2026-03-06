@@ -81,12 +81,12 @@ def main():
     print(f"Loaded {len(expression)} samples, {len(expression.columns)} genes")
     print(f"LUAD: {sum(labels == 'LUAD')}, LUSC: {sum(labels == 'LUSC')}")
     
-    print("\nNormalizing expression...")
-    normalized = normalize_expression(expression)
-    
-    print("\nComputing differential expression...")
-    deg_all, deg_significant = compute_deg(normalized, labels)
-    print(f"Significant DEGs: {len(deg_significant)}")
+    # Compute DEG on log2-only data (NOT z-scored) for proper fold changes
+    print("\nComputing differential expression (on log2 data)...")
+    log2_expr = np.log2(expression + 1)
+    deg_all, deg_significant = compute_deg(log2_expr, labels)
+    print(f"  Total genes analyzed: {len(deg_all)}")
+    print(f"  Significant DEGs: {len(deg_significant)}")
     
     top_genes = deg_significant.head(100)['gene'].tolist()
     if len(top_genes) < 100:
@@ -95,6 +95,9 @@ def main():
     deg_all.to_csv(os.path.join(PROCESSED_DIR, "deg_analysis.csv"), index=False)
     deg_significant.to_csv(os.path.join(PROCESSED_DIR, "deg_significant.csv"), index=False)
     
+    # Z-score normalize for downstream features (after DEG selection)
+    print("\nNormalizing expression (z-score)...")
+    normalized = normalize_expression(expression)
     filtered_expr = normalized[top_genes]
     
     print("\nCreating train/val/test splits...")
