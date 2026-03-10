@@ -2,27 +2,12 @@
   "validation": {
     "expression_only": {
       "accuracy": 0.9470588235294117,
-      "f1": 0.9502762430939227,
-      "auc_roc": 0.9460601024788811,
+      "f1": 0.9497206703910615,
+      "auc_roc": 0.9463370724276416,
       "confusion_matrix": [
         [
-          86,
-          1
-        ],
-        [
-          8,
-          75
-        ]
-      ]
-    },
-    "go_only": {
-      "accuracy": 0.9352941176470588,
-      "f1": 0.9378531073446328,
-      "auc_roc": 0.9348428195540784,
-      "confusion_matrix": [
-        [
-          83,
-          4
+          85,
+          2
         ],
         [
           7,
@@ -30,68 +15,114 @@
         ]
       ]
     },
-    "combined": {
-      "accuracy": 0.8294117647058824,
-      "f1": 0.8497409326424871,
-      "auc_roc": 0.8266860545630799,
+    "go_only": {
+      "accuracy": 0.9294117647058824,
+      "f1": 0.9325842696629213,
+      "auc_roc": 0.9288187231685363,
       "confusion_matrix": [
         [
-          82,
-          5
+          83,
+          4
         ],
         [
-          24,
-          59
+          8,
+          75
         ]
       ]
+    },
+    "combined": {
+      "accuracy": 0.8411764705882353,
+      "f1": 0.8556149732620321,
+      "auc_roc": 0.8392881872316854,
+      "confusion_matrix": [
+        [
+          80,
+          7
+        ],
+        [
+          20,
+          63
+        ]
+      ]
+    },
+    "stacked": {
+      "accuracy": 0.9470588235294117,
+      "f1": 0.9491525423728814,
+      "auc_roc": 0.9466140423764022,
+      "confusion_matrix": [
+        [
+          84,
+          3
+        ],
+        [
+          6,
+          77
+        ]
+      ]
+    },
+    "stacking_weights": {
+      "expression_weight": 4.4750667032497455,
+      "go_weight": 2.9699852852424486,
+      "intercept": -3.3281263816162148
     }
   },
   "cross_validation": {
     "expression_only": {
-      "mean_accuracy": 0.9228403141361257,
-      "std_accuracy": 0.00761451231188434,
+      "mean_accuracy": 0.9165848603839442,
+      "std_accuracy": 0.008017405251069627,
       "fold_scores": [
-        0.9270833333333334,
-        0.9322916666666666,
+        0.921875,
+        0.921875,
         0.9166666666666666,
-        0.9114583333333334,
-        0.9267015706806283
+        0.9010416666666666,
+        0.9214659685863874
       ]
     },
     "go_only": {
-      "mean_accuracy": 0.9238765270506109,
-      "std_accuracy": 0.008484233136603951,
+      "mean_accuracy": 0.9134598603839441,
+      "std_accuracy": 0.015616946739700453,
       "fold_scores": [
-        0.921875,
-        0.9270833333333334,
         0.9114583333333334,
+        0.90625,
+        0.890625,
         0.9375,
         0.9214659685863874
       ]
     },
     "combined": {
-      "mean_accuracy": 0.9311900087260035,
-      "std_accuracy": 0.011060628935526338,
+      "mean_accuracy": 0.9249236474694591,
+      "std_accuracy": 0.015299679189177753,
       "fold_scores": [
+        0.921875,
         0.9114583333333334,
+        0.9114583333333334,
+        0.953125,
+        0.9267015706806283
+      ]
+    },
+    "stacked": {
+      "mean_accuracy": 0.9238710732984293,
+      "std_accuracy": 0.009152501144945414,
+      "fold_scores": [
         0.9375,
-        0.9270833333333334,
-        0.9375,
-        0.9424083769633508
+        0.9166666666666666,
+        0.9166666666666666,
+        0.9322916666666666,
+        0.9162303664921466
       ]
     }
   },
   "case_studies": {
     "total_samples": 170,
-    "misclassified_count": 29,
+    "misclassified_count": 9,
     "cases": [
       {
         "sample_id": "TCGA-66-2756-01",
         "true_label": "LUSC",
         "predicted": "LUAD",
         "type": "misclassified",
-        "go_confidence": 0.9432151714252458,
-        "expr_confidence": 0.8301780528761883,
+        "go_confidence": 0.8162692055585841,
+        "expr_confidence": 0.8289890131577367,
         "go_prediction": "LUAD",
         "expr_prediction": "LUAD"
       },
@@ -100,8 +131,8 @@
         "true_label": "LUSC",
         "predicted": "LUAD",
         "type": "misclassified",
-        "go_confidence": 0.6522444340490743,
-        "expr_confidence": 0.8564891774891775,
+        "go_confidence": 0.5565379402176405,
+        "expr_confidence": 0.865097127273598,
         "go_prediction": "LUAD",
         "expr_prediction": "LUAD"
       },
@@ -110,20 +141,10 @@
         "true_label": "LUSC",
         "predicted": "LUAD",
         "type": "misclassified",
-        "go_confidence": 0.9954568517238381,
-        "expr_confidence": 0.7944415760131627,
+        "go_confidence": 0.976323291741097,
+        "expr_confidence": 0.769407149655207,
         "go_prediction": "LUAD",
         "expr_prediction": "LUAD"
-      },
-      {
-        "sample_id": "TCGA-77-A5G1-01",
-        "true_label": "LUSC",
-        "predicted": "LUAD",
-        "type": "misclassified",
-        "go_confidence": 0.98,
-        "expr_confidence": 0.87,
-        "go_prediction": "LUSC",
-        "expr_prediction": "LUSC"
       },
       {
         "sample_id": "TCGA-55-7724-01",
@@ -131,17 +152,27 @@
         "predicted": "LUSC",
         "type": "misclassified",
         "go_confidence": 1.0,
-        "expr_confidence": 0.98,
+        "expr_confidence": 1.0,
         "go_prediction": "LUSC",
         "expr_prediction": "LUSC"
+      },
+      {
+        "sample_id": "TCGA-44-3398-11",
+        "true_label": "LUAD",
+        "predicted": "LUSC",
+        "type": "misclassified",
+        "go_confidence": 0.6365652270557495,
+        "expr_confidence": 0.6775035121328224,
+        "go_prediction": "LUSC",
+        "expr_prediction": "LUAD"
       },
       {
         "sample_id": "TCGA-78-7147-01",
         "true_label": "LUAD",
         "predicted": "LUAD",
         "type": "correct_high_confidence",
-        "go_confidence": 0.9988550229212386,
-        "expr_confidence": 0.9082221160785557,
+        "go_confidence": 0.9876788458938229,
+        "expr_confidence": 0.9019615199615199,
         "go_prediction": "LUAD",
         "expr_prediction": "LUAD"
       },
@@ -151,7 +182,7 @@
         "predicted": "LUSC",
         "type": "correct_high_confidence",
         "go_confidence": 1.0,
-        "expr_confidence": 0.96,
+        "expr_confidence": 0.94,
         "go_prediction": "LUSC",
         "expr_prediction": "LUSC"
       },
@@ -160,8 +191,8 @@
         "true_label": "LUAD",
         "predicted": "LUAD",
         "type": "correct_high_confidence",
-        "go_confidence": 0.9540470453850958,
-        "expr_confidence": 0.8209809523809524,
+        "go_confidence": 0.8513318800524178,
+        "expr_confidence": 0.7896000000000001,
         "go_prediction": "LUAD",
         "expr_prediction": "LUAD"
       }

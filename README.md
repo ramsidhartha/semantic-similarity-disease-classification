@@ -4,13 +4,14 @@ Interpretable classifier distinguishing **Lung Adenocarcinoma (LUAD)** from **Lu
 
 ## Key Results
 
-| Model | 5-Fold CV Accuracy |
-|-------|--------------------|
-| Expression-only (RF) | 92.6% |
-| GO-only (RF) | 91.7% |
-| **Combined (GBM)** | **93.1%** |
+| Model | 5-Fold CV Accuracy | Validation Accuracy |
+|-------|--------------------|-----------------------|
+| Expression-only (RF) | 91.7% | 94.7% |
+| GO-only (RF) | 91.3% | 92.9% |
+| Combined (concat) | 92.5% | 84.1% |
+| **Stacked (meta-learner)** | **92.4%** | **94.7%** |
 
-The combined model outperforms both individual spaces, confirming that expression and GO features capture complementary biological information.
+The stacked and combined models outperform both individual spaces, confirming that expression and GO features capture complementary biological information.
 
 ## Architecture
 
@@ -19,7 +20,7 @@ Gene Expression (1129 samples × 20531 genes)
             ↓
     Top 100 DEGs (Welch's t-test + BH correction)
             ↓
-    GO Annotation Mapping (90/100 genes annotated)
+    GO Annotation Mapping (83/100 genes annotated)
             ↓
     ┌───────────────┬───────────────┐
     │  GO Space     │  Expr Space   │
@@ -34,7 +35,7 @@ Gene Expression (1129 samples × 20531 genes)
             │               │
             └───── 62 combined features
                         ↓
-              Gradient Boosting Classifier
+              Stacking Meta-Learner (LR)
                         ↓
                LUAD vs LUSC Prediction
 ```
@@ -47,7 +48,7 @@ Each design decision was tested via ablation study:
 |-----------|-------------------|--------|--------|
 | Similarity | Lin, Wang, Hybrid | **Lin-only** | Best CV accuracy; Lin & Wang corr=0.81 (redundant) |
 | Cluster count | k=5, 9, 15, 25 | **k=9** | Eigengap-aligned; k=25 produced 9 singletons |
-| Ensemble | Stacking meta-learner | **None** | No CV improvement over combined GBM |
+| Ensemble | Concat, Stacking | **Stacking** | Meta-learner learns optimal branch weighting (Expr: 4.5, GO: 3.0) |
 
 ## Setup
 

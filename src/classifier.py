@@ -3,6 +3,7 @@ import json
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, f1_score, roc_auc_score, confusion_matrix
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import StratifiedKFold
@@ -23,14 +24,63 @@ class DualSpaceClassifier:
         self.combined_clf = GradientBoostingClassifier(
             n_estimators=100, learning_rate=0.1, max_depth=5, random_state=42
         )
+        # Stacking: meta-learner trained on out-of-fold probabilities
+        self.meta_clf = LogisticRegression(random_state=42)
         self.le = LabelEncoder()
+        self._stacking_fitted = False
     
     def fit(self, X_expr, X_go, X_combined, y):
         y_encoded = self.le.fit_transform(y)
         self.expr_clf.fit(X_expr, y_encoded)
         self.go_clf.fit(X_go, y_encoded)
         self.combined_clf.fit(X_combined, y_encoded)
+        
+        # Stacking: generate out-of-fold predictions to train meta-learner
+        self._fit_stacking(X_expr, X_go, y_encoded)
         return self
+    
+    def _fit_stacking(self, X_expr, X_go, y_encoded):
+        """Train meta-learner using out-of-fold predictions to avoid data leakage."""
+        n_samples = len(y_encoded)
+        meta_features = np.zeros((n_samples, 2))
+        
+        skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+        
+        for train_idx, val_idx in skf.split(X_expr, y_encoded):
+            # Train temporary base models on this fold
+            expr_fold = RandomForestClassifier(
+                n_estimators=100, max_depth=10, random_state=42
+            )
+            go_fold = RandomForestClassifier(
+                n_estimators=100, max_depth=8, random_state=42
+            )
+            
+            expr_fold.fit(X_expr[train_idx], y_encoded[train_idx])
+            go_fold.fit(X_go[train_idx], y_encoded[train_idx])
+            
+            # Out-of-fold predictions (probability of class 1 = LUAD)
+            meta_features[val_idx, 0] = expr_fold.predict_proba(X_expr[val_idx])[:, 1]
+            meta_features[val_idx, 1] = go_fold.predict_proba(X_go[val_idx])[:, 1]
+        
+        # Train meta-learner on out-of-fold probabilities
+        self.meta_clf.fit(meta_features, y_encoded)
+        self._stacking_fitted = True
+    
+    def _predict_stacked(self, X_expr, X_go):
+        """Generate stacked prediction using base model probabilities."""
+        meta_features = np.column_stack([
+            self.expr_clf.predict_proba(X_expr)[:, 1],
+            self.go_clf.predict_proba(X_go)[:, 1]
+        ])
+        return self.le.inverse_transform(self.meta_clf.predict(meta_features))
+    
+    def _predict_stacked_proba(self, X_expr, X_go):
+        """Generate stacked prediction probabilities."""
+        meta_features = np.column_stack([
+            self.expr_clf.predict_proba(X_expr)[:, 1],
+            self.go_clf.predict_proba(X_go)[:, 1]
+        ])
+        return self.meta_clf.predict_proba(meta_features)
     
     def predict(self, X_combined):
         return self.le.inverse_transform(self.combined_clf.predict(X_combined))
@@ -39,12 +89,14 @@ class DualSpaceClassifier:
         y_pred_expr = self.le.inverse_transform(self.expr_clf.predict(X_expr))
         y_pred_go = self.le.inverse_transform(self.go_clf.predict(X_go))
         y_pred_combined = self.le.inverse_transform(self.combined_clf.predict(X_combined))
+        y_pred_stacked = self._predict_stacked(X_expr, X_go)
         
         results = {}
         for name, y_pred in [
             ('expression_only', y_pred_expr),
             ('go_only', y_pred_go),
-            ('combined', y_pred_combined)
+            ('combined', y_pred_combined),
+            ('stacked', y_pred_stacked)
         ]:
             results[name] = {
                 'accuracy': float(accuracy_score(y, y_pred)),
@@ -54,6 +106,15 @@ class DualSpaceClassifier:
                     (np.array(y_pred) == 'LUAD').astype(int)
                 )),
                 'confusion_matrix': confusion_matrix(y, y_pred).tolist()
+            }
+        
+        # Show stacking weights
+        if self._stacking_fitted:
+            coefs = self.meta_clf.coef_[0]
+            results['stacking_weights'] = {
+                'expression_weight': float(coefs[0]),
+                'go_weight': float(coefs[1]),
+                'intercept': float(self.meta_clf.intercept_[0])
             }
         
         return results
@@ -70,7 +131,7 @@ def cross_validate(X_expr, X_go, X_combined, y, n_folds=5):
     skf = StratifiedKFold(n_splits=n_folds, shuffle=True, random_state=42)
     
     fold_results = {
-        'expression_only': [], 'go_only': [], 'combined': []
+        'expression_only': [], 'go_only': [], 'combined': [], 'stacked': []
     }
     
     for fold, (train_idx, val_idx) in enumerate(skf.split(X_expr, y)):
@@ -85,7 +146,8 @@ def cross_validate(X_expr, X_go, X_combined, y, n_folds=5):
         
         print(f"  Fold {fold+1}: Expr={results['expression_only']['accuracy']:.3f}  "
               f"GO={results['go_only']['accuracy']:.3f}  "
-              f"Combined={results['combined']['accuracy']:.3f}")
+              f"Combined={results['combined']['accuracy']:.3f}  "
+              f"Stacked={results['stacked']['accuracy']:.3f}")
     
     cv_summary = {}
     for model, scores in fold_results.items():
@@ -99,7 +161,8 @@ def cross_validate(X_expr, X_go, X_combined, y, n_folds=5):
 
 
 def case_study_analysis(classifier, X_expr, X_go, X_combined, y, sample_ids):
-    y_pred = classifier.predict(X_combined)
+    # Use stacked prediction for case studies
+    y_pred = classifier._predict_stacked(X_expr, X_go)
     
     misclassified = np.where(np.array(y) != np.array(y_pred))[0]
     correct = np.where(np.array(y) == np.array(y_pred))[0]
@@ -160,23 +223,32 @@ def main():
     y_train = train_df['cancer_type'].values
     y_val = val_df['cancer_type'].values
     
-    print("Training dual-space classifier...")
+    print("Training dual-space classifier (with stacking)...")
     classifier = DualSpaceClassifier()
     classifier.fit(train_expr, train_go, train_combined, y_train)
     
     print("\nEvaluating on validation set...")
     results = classifier.evaluate(val_expr, val_go, val_combined, y_val)
     
-    print("\n" + "="*50)
+    print("\n" + "="*60)
     print("RESULTS COMPARISON")
-    print("="*50)
+    print("="*60)
     for model, metrics in results.items():
+        if model == 'stacking_weights':
+            continue
         print(f"\n{model.upper()}")
         print(f"  Accuracy:  {metrics['accuracy']:.4f}")
         print(f"  F1 Score:  {metrics['f1']:.4f}")
         print(f"  AUC-ROC:   {metrics['auc_roc']:.4f}")
         cm = metrics['confusion_matrix']
         print(f"  Confusion: [[{cm[0][0]}, {cm[0][1]}], [{cm[1][0]}, {cm[1][1]}]]")
+    
+    if 'stacking_weights' in results:
+        w = results['stacking_weights']
+        print(f"\nSTACKING WEIGHTS:")
+        print(f"  Expression branch: {w['expression_weight']:.3f}")
+        print(f"  GO branch:         {w['go_weight']:.3f}")
+        print(f"  Intercept:         {w['intercept']:.3f}")
     
     print("\n5-Fold Cross-Validation...")
     all_expr = np.vstack([train_expr, val_expr])
@@ -190,7 +262,7 @@ def main():
     for model, cv in cv_results.items():
         print(f"  {model}: {cv['mean_accuracy']:.3f} +/- {cv['std_accuracy']:.3f}")
     
-    print("\nCase Study Analysis...")
+    print("\nCase Study Analysis (using stacked model)...")
     case_results = case_study_analysis(
         classifier, val_expr, val_go, val_combined, y_val,
         sample_ids=val_df.index.tolist()
@@ -210,7 +282,10 @@ def main():
     with open(os.path.join(RESULTS_DIR, "model_comparison.json"), 'w') as f:
         json.dump(all_results, f, indent=2)
     
-    simple_results = {k: {'accuracy': v['accuracy'], 'f1': v['f1']} for k, v in results.items()}
+    simple_results = {}
+    for k, v in results.items():
+        if k != 'stacking_weights':
+            simple_results[k] = {'accuracy': v['accuracy'], 'f1': v['f1']}
     with open(os.path.join(RESULTS_DIR, "model_comparison_simple.json"), 'w') as f:
         json.dump(simple_results, f, indent=2)
     
