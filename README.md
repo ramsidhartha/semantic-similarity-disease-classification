@@ -6,12 +6,12 @@ Interpretable classifier distinguishing **Lung Adenocarcinoma (LUAD)** from **Lu
 
 | Model | 5-Fold CV Accuracy | Validation Accuracy |
 |-------|--------------------|-----------------------|
-| Expression-only (RF) | 91.7% | 94.7% |
+| Expression-only (RF) | 92.6% | 92.9% |
 | GO-only (RF) | 91.3% | 92.9% |
-| Combined (concat) | 92.5% | 84.1% |
-| **Stacked (meta-learner)** | **92.4%** | **94.7%** |
+| Combined (concat) | 91.8% | 88.2% |
+| **Stacked (meta-learner)** | **92.3%** | **93.5%** |
 
-The stacked and combined models outperform both individual spaces, confirming that expression and GO features capture complementary biological information.
+All results computed with leak-free preprocessing (split first, DEG and z-score fitted on train only). The stacked model outperforms both individual spaces, confirming that expression and GO features capture complementary biological information.
 
 ## Architecture
 
@@ -20,7 +20,7 @@ Gene Expression (1129 samples × 20531 genes)
             ↓
     Top 100 DEGs (Welch's t-test + BH correction)
             ↓
-    GO Annotation Mapping (83/100 genes annotated)
+    GO Annotation Mapping (84/100 genes annotated)
             ↓
     ┌───────────────┬───────────────┐
     │  GO Space     │  Expr Space   │
