@@ -20,12 +20,17 @@ class FeatureExtractor:
         self.gene_modules = None
         self.luad_centroid = None
         self.lusc_centroid = None
+        self.top_var_genes = None  # fitted on train only
         
         with open(os.path.join(PROCESSED_DIR, "gene_go_mapping.json"), 'r') as f:
             self.gene_to_go = json.load(f)
         
         self.go_matrix = np.load(os.path.join(PROCESSED_DIR, "go_similarity_matrix.npy"))
-        self.go_genes = sorted(self.gene_to_go.keys())
+        
+        # CRITICAL: load the gene order that was used when building the similarity
+        # matrix. Do NOT re-sort — matrix rows/cols must match this exact ordering.
+        with open(os.path.join(PROCESSED_DIR, "similarity_genes.json"), 'r') as f:
+            self.go_genes = json.load(f)
     
     def _cluster_genes_by_go(self):
         if len(self.go_genes) < self.n_modules:
@@ -54,6 +59,10 @@ class FeatureExtractor:
         self.pca = PCA(n_components=min(self.n_pca_components, X_train.shape[1]))
         self.pca.fit(X_train)
         
+        # Fit top-variance genes on train only — reused for val/test to ensure
+        # the same 30 genes are selected across all splits.
+        self.top_var_genes = X_train.var().nlargest(30).index.tolist()
+        
         self.gene_modules = self._cluster_genes_by_go()
         
         luad_mask = y_train == 'LUAD'
@@ -69,8 +78,8 @@ class FeatureExtractor:
     
     def extract_expression_features(self, X):
         pca_features = self.pca.transform(X)
-        top_var_genes = X.var().nlargest(30).index.tolist()
-        top_expr = X[top_var_genes].values
+        # Use train-fitted gene list — same genes for all splits
+        top_expr = X[self.top_var_genes].values
         
         expr_features = np.hstack([pca_features, top_expr])
         return expr_features
