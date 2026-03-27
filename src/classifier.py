@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score, f1_score, roc_auc_score, confusion_matrix
+from sklearn.metrics import accuracy_score, f1_score, roc_auc_score, confusion_matrix, roc_curve
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.model_selection import StratifiedKFold
 from sklearn.pipeline import Pipeline
@@ -122,11 +122,16 @@ class DualSpaceClassifier:
             ('combined', y_pred_combined, y_prob_combined),
             ('stacked', y_pred_stacked, y_prob_stacked)
         ]:
+            fpr, tpr, _ = roc_curve(y_true_binary, y_prob)
             results[name] = {
                 'accuracy': float(accuracy_score(y, y_pred)),
                 'f1': float(f1_score(y, y_pred, pos_label='LUAD')),
                 'auc_roc': float(roc_auc_score(y_true_binary, y_prob)),
-                'confusion_matrix': confusion_matrix(y, y_pred).tolist()
+                'confusion_matrix': confusion_matrix(y, y_pred).tolist(),
+                'roc_curve': {
+                    'fpr': fpr.tolist(),
+                    'tpr': tpr.tolist()
+                }
             }
         
         # Show stacking weights (access LR inside pipeline)

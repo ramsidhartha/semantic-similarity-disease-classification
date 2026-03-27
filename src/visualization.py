@@ -78,6 +78,31 @@ def plot_go_similarity_heatmap(matrix, genes, output_path, n_genes=50):
     plt.close()
 
 
+def plot_adjacency_matrix(matrix, genes, output_path, threshold=0.5):
+    """Binary adjacency matrix: black = similarity > threshold, white = no edge."""
+    n = len(genes)
+    adj = (matrix > threshold).astype(float)
+    np.fill_diagonal(adj, 0)  # hide diagonal (self-similarity)
+
+    fig, ax = plt.subplots(figsize=(14, 12))
+    ax.imshow(1 - adj, cmap='gray', vmin=0, vmax=1, interpolation='nearest')
+
+    ax.set_xticks(range(n))
+    ax.set_yticks(range(n))
+    ax.set_xticklabels(genes, rotation=90, fontsize=5)
+    ax.set_yticklabels(genes, fontsize=5)
+
+    ax.set_title(
+        f'GO Functional Similarity Adjacency Matrix\n'
+        f'(black = Lin similarity > {threshold}, {n} genes)',
+        fontsize=12
+    )
+
+    plt.tight_layout()
+    plt.savefig(output_path, dpi=150)
+    plt.close()
+
+
 def plot_go_network(matrix, genes, output_path, threshold=0.5, n_genes=30):
     if len(genes) > n_genes:
         matrix = matrix[:n_genes, :n_genes]
@@ -171,6 +196,44 @@ def plot_feature_importance(importance, feature_names, output_path, top_n=15):
     plt.close()
 
 
+def plot_roc_curves(results, output_path):
+    fig, ax = plt.subplots(figsize=(8, 8))
+    
+    colors = {
+        'expression_only': 'steelblue',
+        'go_only': 'coral',
+        'combined': 'mediumseagreen',
+        'stacked': 'mediumpurple'
+    }
+    
+    # model_comparison.json has a "validation" root key we need to unnest
+    plot_data = results.get('validation', results)
+    
+    for model_name, data in plot_data.items():
+        if 'roc_curve' in data:
+            fpr = data['roc_curve']['fpr']
+            tpr = data['roc_curve']['tpr']
+            auc = data.get('auc_roc', 0)
+            
+            label = f"{model_name.replace('_', ' ').title()} (AUC = {auc:.3f})"
+            color = colors.get(model_name, 'gray')
+            
+            ax.plot(fpr, tpr, label=label, color=color, linewidth=2)
+            
+    # Plot diagonal (random chance)
+    ax.plot([0, 1], [0, 1], 'k--', alpha=0.5, label='Random Chance')
+    
+    ax.set_xlabel('False Positive Rate', fontsize=12)
+    ax.set_ylabel('True Positive Rate', fontsize=12)
+    ax.set_title('ROC Curves by Model', fontsize=14)
+    ax.legend(loc='lower right', fontsize=10)
+    ax.grid(True, alpha=0.3)
+    
+    plt.tight_layout()
+    plt.savefig(output_path, dpi=150)
+    plt.close()
+
+
 def generate_all_visualizations():
     os.makedirs(FIGURES_DIR, exist_ok=True)
     
@@ -194,6 +257,9 @@ def generate_all_visualizations():
         
         plot_go_network(matrix, genes, os.path.join(FIGURES_DIR, "go_network.png"))
         print("  Created go_network.png")
+        
+        plot_adjacency_matrix(matrix, genes, os.path.join(FIGURES_DIR, "go_adjacency.png"))
+        print("  Created go_adjacency.png")
     
     results_path = os.path.join(RESULTS_DIR, "model_comparison_simple.json")
     if not os.path.exists(results_path):
@@ -203,6 +269,13 @@ def generate_all_visualizations():
             results = json.load(f)
         plot_model_comparison(results, os.path.join(FIGURES_DIR, "model_comparison.png"))
         print("  Created model_comparison.png")
+    
+    full_results_path = os.path.join(RESULTS_DIR, "model_comparison.json")
+    if os.path.exists(full_results_path):
+        with open(full_results_path, 'r') as f:
+            full_results = json.load(f)
+        plot_roc_curves(full_results, os.path.join(FIGURES_DIR, "roc_curves.png"))
+        print("  Created roc_curves.png")
     
     print("\nAll visualizations complete.")
 
