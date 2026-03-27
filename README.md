@@ -6,12 +6,12 @@ Interpretable classifier distinguishing **Lung Adenocarcinoma (LUAD)** from **Lu
 
 | Model | 5-Fold CV Accuracy | Validation Accuracy |
 |-------|--------------------|-----------------------|
-| Expression-only (RF) | 92.6% | 92.9% |
-| GO-only (RF) | 91.3% | 92.9% |
-| Combined (concat) | 91.8% | 88.2% |
-| **Stacked (meta-learner)** | **92.3%** | **93.5%** |
+| Expression-only (RF) | 92.6% | 95.3% |
+| GO-only (RF) | 91.9% | 94.1% |
+| Combined (concat) | 92.6% | 95.3% |
+| **Stacked (meta-learner)** | **92.8%** | **95.3%** |
 
-All results computed with leak-free preprocessing (split first, DEG and z-score fitted on train only). The stacked model outperforms both individual spaces, confirming that expression and GO features capture complementary biological information.
+All results use leak-free preprocessing (split-first, train-only DEG + z-score) and correctly ordered GO module features. Only 8/170 validation samples misclassified.
 
 ## Architecture
 
