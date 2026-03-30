@@ -234,6 +234,52 @@ def plot_roc_curves(results, output_path):
     plt.close()
 
 
+def plot_confusion_matrices(results, output_path):
+    import seaborn as sns
+    
+    plot_data = results.get('validation', results)
+    
+    # Filter only models that have a confusion matrix
+    models = [m for m, d in plot_data.items() if 'confusion_matrix' in d]
+    
+    if not models:
+        print("No confusion matrix data found.")
+        return
+        
+    n_models = len(models)
+    cols = 2
+    rows = int(np.ceil(n_models / cols))
+    
+    fig, axes = plt.subplots(rows, cols, figsize=(12, 5 * rows))
+    if rows == 1 and cols == 1:
+        axes = np.array([[axes]])
+    elif rows == 1 or cols == 1:
+        axes = axes.flatten()
+    else:
+        axes = axes.flatten()
+        
+    labels = ['LUAD', 'LUSC']
+    
+    for i, model_name in enumerate(models):
+        ax = axes[i]
+        cm = np.array(plot_data[model_name]['confusion_matrix'])
+        
+        sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', ax=ax, 
+                    xticklabels=labels, yticklabels=labels)
+        
+        ax.set_title(model_name.replace('_', ' ').title(), fontsize=14)
+        ax.set_ylabel('True Label', fontsize=12)
+        ax.set_xlabel('Predicted Label', fontsize=12)
+        
+    # Hide any unused subplots
+    for j in range(i + 1, len(axes)):
+        fig.delaxes(axes[j])
+        
+    plt.tight_layout()
+    plt.savefig(output_path, dpi=150)
+    plt.close()
+
+
 def generate_all_visualizations():
     os.makedirs(FIGURES_DIR, exist_ok=True)
     
@@ -276,6 +322,9 @@ def generate_all_visualizations():
             full_results = json.load(f)
         plot_roc_curves(full_results, os.path.join(FIGURES_DIR, "roc_curves.png"))
         print("  Created roc_curves.png")
+        
+        plot_confusion_matrices(full_results, os.path.join(FIGURES_DIR, "confusion_matrices.png"))
+        print("  Created confusion_matrices.png")
     
     print("\nAll visualizations complete.")
 
