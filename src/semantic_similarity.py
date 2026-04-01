@@ -23,24 +23,60 @@ class SemanticSimilarity:
 
     def _compute_ic(self):
         """
-        Compute local Information Content from the selected-gene annotation set.
-        IC(t) = -log(#genes annotated with t / total genes).
-        Only terms that appear as direct annotations are assigned IC > 0;
-        ancestor-only terms get IC = 0 via .get(t, 0) in term_similarity_lin.
-        This is an intentional design choice: IC is derived from our gene set,
-        not the full GO corpus.
+        Compute Information Content using propagated annotation counts from the
+        full GOA human corpus (NOT excluded, Biological Process only).
+
+        For each GO term t: frequency(t) = genes annotated to t OR any descendant
+        of t, divided by total unique annotated genes.
+
+        Propagation guarantees that ancestor terms always have frequency >= their
+        descendants, so IC(ancestor) <= IC(child). This keeps the MICA IC below
+        both child-term ICs, ensuring Lin similarity stays in [0, 1].
         """
-        term_counts = {}
-        total = len(self.gene_to_go)
+        gaf_path = os.path.join(GO_DIR, "goa_human.gaf")
+        gene_direct_terms = {}
+        all_genes = set()
 
-        for terms in self.gene_to_go.values():
-            for term in terms:
-                term_counts[term] = term_counts.get(term, 0) + 1
+        with open(gaf_path, 'r') as f:
+            for line in f:
+                if line.startswith('!'):
+                    continue
+                parts = line.strip().split('\t')
+                if len(parts) < 15:
+                    continue
+                if 'NOT' in parts[3]:
+                    continue
+                if parts[8] != 'P':
+                    continue
+                gene = parts[2]
+                go_id = parts[4]
+                all_genes.add(gene)
+                gene_direct_terms.setdefault(gene, set()).add(go_id)
 
+        # Propagate each annotation up to all ancestors (memoized).
+        _anc_cache = {}
+        def get_ancestors_cached(tid):
+            if tid in _anc_cache:
+                return _anc_cache[tid]
+            result = {tid}
+            if tid in self.godag:
+                for parent in self.godag[tid].parents:
+                    result.update(get_ancestors_cached(parent.id))
+            _anc_cache[tid] = result
+            return result
+
+        term_gene_count = {}
+        for gene, terms in gene_direct_terms.items():
+            covered = set()
+            for t in terms:
+                covered.update(get_ancestors_cached(t))
+            for t in covered:
+                term_gene_count[t] = term_gene_count.get(t, 0) + 1
+
+        total = len(all_genes)
         ic = {}
-        for term, count in term_counts.items():
-            freq = count / total
-            ic[term] = -np.log(freq)
+        for go_id, count in term_gene_count.items():
+            ic[go_id] = -np.log(count / total)
 
         return ic
 
