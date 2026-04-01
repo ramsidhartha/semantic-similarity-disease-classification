@@ -7,11 +7,11 @@ Interpretable classifier distinguishing **Lung Adenocarcinoma (LUAD)** from **Lu
 | Model | 5-Fold CV Accuracy | Validation Accuracy | AUC-ROC |
 |-------|--------------------|-----------------------|---------|
 | Expression-only (RF) | 92.6% | 95.3% | 0.971 |
-| GO-only (RF) | 91.9% | 94.1% | 0.959 |
-| Combined (concat) | 92.6% | 95.3% | 0.981 |
-| **Stacked (meta-learner)** | **93.0%** | **95.3%** | **0.972** |
+| GO-only (RF) | 91.7% | 92.4% | 0.959 |
+| Combined (concat) | 92.2% | 93.5% | 0.981 |
+| **Stacked (meta-learner)** | **92.7%** | **94.7%** | **0.972** |
 
-All results use leak-free preprocessing (split-first, train-only DEG + z-score), correctly ordered GO module features, and probability-based AUC-ROC. Only 8/170 validation samples misclassified.
+All results use leak-free preprocessing (split-first, train-only DEG + z-score), correctly ordered GO module features, global DAG-propagated Information Content for semantic similarity, and probability-based AUC-ROC. Only 9/170 validation samples misclassified.
 
 ## Architecture
 

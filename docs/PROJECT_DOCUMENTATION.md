@@ -124,29 +124,29 @@ Input: Gene Expression Matrix (1129 samples x 20531 genes)
 | Model             | Accuracy | F1 Score | AUC-ROC |
 |-------------------|----------|----------|---------|
 | Expression-only   | 95.3%    | 0.955    | 0.971   |
-| GO-only           | 94.1%    | 0.945    | 0.959   |
-| Combined          | 95.3%    | 0.955    | 0.981   |
-| **Stacked (Meta)**| **95.3%**| **0.955**| **0.972**|
+| GO-only           | 92.4%    | 0.927    | 0.959   |
+| Combined          | 93.5%    | 0.939    | 0.981   |
+| **Stacked (Meta)**| **94.7%**| **0.949**| **0.972**|
 
 ### 5.2 5-Fold Cross-Validation
 
 | Model           | Mean Accuracy | Std  |
 |-----------------|---------------|------|
 | Expression-only | 92.6%         | 0.7% |
-| GO-only         | 91.9%         | 1.3% |
-| Combined        | 92.6%         | 1.7% |
-| **Stacked**     | **93.0%**     | **0.8%** |
+| GO-only         | 91.7%         | 1.3% |
+| Combined        | 92.2%         | 1.3% |
+| **Stacked**     | **92.7%**     | **0.9%** |
 
 ---
 
 ## 6. Key Observations
 
-1. Both spaces achieve comparable validation accuracy (~94-95%) when viewing the same 100 genes, confirming true dual-space design.
+1. Both spaces achieve comparable validation accuracy (~92-95%) when viewing the same 100 genes, confirming true dual-space design.
 2. Lin similarity was selected over hybrid (Lin+Wang) after ablation study showed no significant CV improvement (corr=0.81).
 3. k=9 modules selected via eigenvalue spectrum analysis; k=25 produced 9 singletons and higher variance.
-4. 5-fold CV shows Stacked Meta-Learner (**93.0%**) outperforms individual branches while maintaining the highest stability (0.8% std dev).
-5. All instances of Data Leakage (in centroid calculation, variance gene selection, and preprocessing) and gene ordering mismatches have been rigorously fixed.
-6. Case study analysis identifies only 8/170 misclassified samples on validation.
+4. 5-fold CV shows Stacked Meta-Learner (**92.7%**) outperforms individual branches while maintaining high stability (0.9% std dev).
+5. All instances of Data Leakage (in centroid calculation, variance gene selection, and preprocessing), local IC flaws, and gene ordering mismatches have been rigorously fixed.
+6. Case study analysis identifies only 9/170 misclassified samples on validation.
 7. 90% GO annotation coverage (90/100 genes) ensures both spaces operate on a consistent, well-annotated gene set.
 
 ---
