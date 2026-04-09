@@ -301,20 +301,6 @@ def generate_all_visualizations():
         plot_go_similarity_heatmap(matrix, genes, os.path.join(FIGURES_DIR, "go_heatmap.png"))
         print("  Created go_heatmap.png")
         
-        plot_go_network(matrix, genes, os.path.join(FIGURES_DIR, "go_network.png"))
-        print("  Created go_network.png")
-        
-        plot_adjacency_matrix(matrix, genes, os.path.join(FIGURES_DIR, "go_adjacency.png"))
-        print("  Created go_adjacency.png")
-    
-    results_path = os.path.join(RESULTS_DIR, "model_comparison_simple.json")
-    if not os.path.exists(results_path):
-        results_path = os.path.join(RESULTS_DIR, "model_comparison.json")
-    if os.path.exists(results_path):
-        with open(results_path, 'r') as f:
-            results = json.load(f)
-        plot_model_comparison(results, os.path.join(FIGURES_DIR, "model_comparison.png"))
-        print("  Created model_comparison.png")
     
     full_results_path = os.path.join(RESULTS_DIR, "model_comparison.json")
     if os.path.exists(full_results_path):
